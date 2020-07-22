@@ -8,32 +8,33 @@ import (
 	"os"
 	"strings"
 	"time"
-	"unicode"
 )
 
 var tlds string
-
-const allowedChars = "abcdefghijklmnopqrstuvwxyz0123456789_-"
+var hostnames string
 
 func main() {
+	var randomTLD string
+	var randomHostname string
+
 	tldsArray := splitStringArray(tlds)
+	hostnamesArray := splitStringArray(hostnames)
 	s := bufio.NewScanner(os.Stdin)
 
 	for s.Scan() {
-		text := strings.ToLower(s.Text())
-		var newText []rune
+		sld := GenNewSecondLevelDomain(s.Text())
+		randomTLD = tldsArray[rand.Intn(len(tldsArray))]
+		randomHostname = hostnamesArray[rand.Intn(len(hostnamesArray))]
+		result := randomHostname + "." + sld + "." + randomTLD
 
-		for _, r := range text {
-			if unicode.IsSpace(r) {
-				r = '-'
-			}
-			if !strings.ContainsRune(allowedChars, r) {
-				continue
-			}
-			newText = append(newText, r)
+		if len(result) > 255 {
+			quantityToCut := 255 - len(randomHostname) - len(randomTLD) - 2
+			cuttedNewText := sld[:quantityToCut]
+			result = randomHostname + "." + cuttedNewText + "." + randomTLD
 		}
 
-		fmt.Println(string(newText) + "." + tldsArray[rand.Intn(len(tldsArray))])
+		// Add random top level domain name and print it at standard output.
+		fmt.Println(result)
 	}
 }
 
@@ -48,6 +49,7 @@ func init() {
 
 	// Flags config
 	flag.StringVar(&tlds, "tlds", "com,net,org,website", "Top-level Domain names")
+	flag.StringVar(&hostnames, "h", "www,es,en", "hostname")
 
 	flag.Parse()
 }
